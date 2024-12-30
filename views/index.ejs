@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RTSP Stream</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <div id="controls">
+        <button id="startButton">Start Viewing</button>
+        <!-- <button id="captureButton">Capture Image</button> -->
+        <button id="record-list" onclick="location.href='/recordings'">Recording</button>
+    </div>
+    <div id="imageModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8);">
+        <img id="modalImage" style="max-width:90%; max-height:90%; margin:auto; display:block; position:relative; top:50%; transform:translateY(-50%);">
+    </div>
+    
+    <div id="video-container" class="grid-container">
+        <% cameras.forEach(camera => { %>
+            <div class="grid-item">
+                <p><%= camera %></p>
+                <canvas id="canvas-<%= camera %>" width="320" height="240"></canvas>
+                <div class="record-control">
+                    <!-- <label for="startTime-<%= camera %>">Start Time:</label>
+                    <input id="startTime-<%= camera %>" type="datetime-local" value="2024-11-27T10:30"/>
+                    <br> -->
+                    <label for="duration-<%= camera %>">Duration(seconds):</label>
+                    <input id="duration-<%= camera %>" type="number" min="1" step="1" placeholder="900">
+                    <br>
+                    <button onclick="startRecordingUI('<%= camera %>')">Start Recording</button>
+                </div>
+            </div>
+        <% }) %>
+    </div>
+
+    <script src="<%= scriptUrl %>"></script>
+    <script src="js/scripts.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd"></script>
+    <script>
+        function startRecordingUI(cameraId){
+            // const startTimeInput = document.getElementById(`startTime-${cameraId}`);
+            const durationInput = document.getElementById(`duration-${cameraId}`);
+            // const startTime = startTimeInput.value;
+            const duration = parseInt(durationInput.value) || 900;
+
+            fetch('/api/start-recording/',{
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({cameraId,duration})
+            })
+            .then(response => response.json())
+            .then(data=>{
+                if (data.success){
+                    alert(`Recording started for camera ${cameraId}`);
+                } else {
+                    alert(`Error: ${data.message}`);
+                }
+            })
+            .catch(error=>{
+                console.error('Error starting recording:', error);
+                alert('An error occurred while starting the recording.');
+            });
+        }
+    </script>
+</body>
+</html>
